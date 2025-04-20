@@ -232,8 +232,14 @@ def convert(input_file, output_file):
                     out_card = data.get("card")
                     out_card = zxid_to_thid(out_card)
                     # 如果当前切牌位置是最右侧的牌则表示摸切
-                    if last_in_card != 0 and data["move_cards_pos"][0] == player_game_log[userId]["hand_cards_num"] + 1:
+                    move_cards_pos = data.get("move_cards_pos", None)
+
+                    # 日志有时候会丢失切牌位置，这种情况暂且默认是摸切
+                    if move_cards_pos is None:
                         out_card = 60 # 60表示摸切
+                    elif last_in_card != 0 and move_cards_pos[0] == player_game_log[userId]["hand_cards_num"] + 1:
+                        out_card = 60 # 60表示摸切
+
                     if data["is_li_zhi"]:
                         out_card = f"r{out_card}"
                     player_game_log[userId]["discard_cards"].append(out_card)
