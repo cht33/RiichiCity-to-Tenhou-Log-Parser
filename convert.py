@@ -181,17 +181,9 @@ def convert(input_file, output_file):
         log.append([changCi, benChangNum, lizhibang_num])
         log.append(point_list)
 
-        # 解析宝牌指示牌和里宝指示牌
-        paiShan = record.get("paiShan", "")
-        baopai = [paiShan[-5], paiShan[-7], paiShan[-9], paiShan[-11]]
-        libaopai = [paiShan[-6], paiShan[-8], paiShan[-10], paiShan[-12]]
-        baopai = [zxid_to_thid(card) for card in baopai]
-        libaopai = [zxid_to_thid(card) for card in libaopai]
-        log.append(baopai)
-        log.append(libaopai)
-
         out_card_userId = 0
         last_in_card = 0
+        baipai_num = 1
         end_info = []
 
         for event in record["handEventRecord"]:
@@ -270,6 +262,7 @@ def convert(input_file, output_file):
 
                 elif action == 6: # 6表示明杠
                     player_game_log[userId]["hand_cards_num"] -= 3
+                    baopai_num += 1
                     in_card = data.get("card")
                     in_card = zxid_to_thid(in_card)
                     in_idx = player_id_list.index(userId)
@@ -293,6 +286,7 @@ def convert(input_file, output_file):
 
                 elif action == 8: # 8表示暗杠
                     player_game_log[userId]["hand_cards_num"] -= 3
+                    baipai_num += 1
                     card = data.get("card")
                     card = zxid_to_thid(card)
                     group_cards = data.get("group_cards", [])
@@ -302,6 +296,7 @@ def convert(input_file, output_file):
                     player_game_log[userId]["discard_cards"].append(kang_info)
 
                 elif action == 9: # 9表示补杠
+                    baipai_num += 1
                     in_card = data.get("card")
                     in_card = zxid_to_thid(in_card)
                     target_card = in_card
@@ -389,6 +384,18 @@ def convert(input_file, output_file):
 
             else:
                 print(f"Unknown event type: {event}")
+
+        # 解析宝牌指示牌和里宝指示牌
+        paiShan = record.get("paiShan", "")
+        baopai = [paiShan[-5], paiShan[-7], paiShan[-9], paiShan[-11]]
+        libaopai = [paiShan[-6], paiShan[-8], paiShan[-10], paiShan[-12]]
+        baopai = [zxid_to_thid(card) for card in baopai]
+        libaopai = [zxid_to_thid(card) for card in libaopai]
+
+        # 未处理四杠的情况，会出问题
+        if baipai_num > 4: baipai_num = 4
+        log.append(baopai[:baipai_num])
+        log.append(libaopai[:baipai_num])
 
         for userId in player_id_list:
             log.append(player_game_log[userId]["hand_cards"])
