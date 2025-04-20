@@ -188,7 +188,7 @@ def convert(input_file, output_file, init_point=None):
 
         out_card_userId = 0
         last_in_card = 0
-        baipai_num = 1
+        baopai_num = 1
         end_info = []
 
         for event in record["handEventRecord"]:
@@ -291,7 +291,7 @@ def convert(input_file, output_file, init_point=None):
 
                 elif action == 8: # 8表示暗杠
                     player_game_log[userId]["hand_cards_num"] -= 3
-                    baipai_num += 1
+                    baopai_num += 1
                     card = data.get("card")
                     card = zxid_to_thid(card)
                     group_cards = data.get("group_cards", [])
@@ -301,7 +301,7 @@ def convert(input_file, output_file, init_point=None):
                     player_game_log[userId]["discard_cards"].append(kang_info)
 
                 elif action == 9: # 9表示补杠
-                    baipai_num += 1
+                    baopai_num += 1
                     in_card = data.get("card")
                     in_card = zxid_to_thid(in_card)
                     target_card = in_card
@@ -398,9 +398,9 @@ def convert(input_file, output_file, init_point=None):
         libaopai = [zxid_to_thid(card) for card in libaopai]
 
         # 未处理四杠的情况，会出问题
-        if baipai_num > 4: baipai_num = 4
-        log.append(baopai[:baipai_num])
-        log.append(libaopai[:baipai_num])
+        if baopai_num > 4: baopai_num = 4
+        log.append(baopai[:baopai_num])
+        log.append(libaopai[:baopai_num])
 
         for userId in player_id_list:
             log.append(player_game_log[userId]["hand_cards"])
