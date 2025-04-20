@@ -116,7 +116,7 @@ Yakus = {
 }
 
 # 读取掌心麻将的日志并将其转换成tenhou6的json格式
-def convert(input_file, output_file):
+def convert(input_file, output_file, init_point=None):
     # 读取日志文件
     with open(input_file, 'r', encoding='utf-8') as f:
         zx_data = json.load(f)
@@ -179,6 +179,11 @@ def convert(input_file, output_file):
         point_list = [player.get("points") for player in players]
         lizhibang_num = (total_points - sum(point_list)) // 1000
         log.append([changCi, benChangNum, lizhibang_num])
+
+        if init_point is not None:
+            point_list = [init_point] * 4
+            for i in range(lizhibang_num):
+                point_list[i % 4] -= 1000
         log.append(point_list)
 
         out_card_userId = 0
@@ -420,8 +425,8 @@ if __name__ == "__main__":
     import sys
     from pathlib import Path
 
-    if len(sys.argv) != 3:
-        print("Usage: python convert.py <input_file> <output_file>")
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
+        print("Usage: python convert.py <input_file> <output_file> [init_point]")
         sys.exit(1)
 
     input_file = Path(sys.argv[1])
@@ -431,5 +436,8 @@ if __name__ == "__main__":
         print(f"Input file {input_file} does not exist.")
         sys.exit(1)
 
-    convert(input_file, output_file)
+    init_point = None
+    if len(sys.argv) == 4:
+        init_point = int(sys.argv[3])
+    convert(input_file, output_file, init_point=init_point)
 

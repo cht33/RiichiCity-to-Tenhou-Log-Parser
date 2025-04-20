@@ -8,5 +8,6 @@ The exported records are split by individual kyoku (局, single rounds) rather t
 ## Usage
 Download the paifu (牌譜, game record) logs from [zx-api.pesiu.org](https://zx-api.pesiu.org) using the paifu ID, then run the command:
 ```
-python convert.py <riichi_city_log_file> <tenhou6_log_file>
+python convert.py <riichi_city_log_file> <tenhou6_log_file> [init_point]
 ```
+if `init_point` is no None, the point of each player in each kyoku will be around `init_point`.
