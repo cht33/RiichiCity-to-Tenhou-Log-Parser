@@ -394,7 +394,10 @@ def convert(input_file, output_file):
             log.append(player_game_log[userId]["hand_cards"])
             log.append(player_game_log[userId]["draw_cards"])
             log.append(player_game_log[userId]["discard_cards"])
-        log.append(end_info)
+
+        # 由于naga解析胡牌信息时可能会出问题，暂时不添加胡牌信息
+        # log.append(end_info)
+        log.append(["不明"]) # 这里添加一个空的胡牌信息，避免naga解析错误
         tenhou_game_log["log"] = [log]
 
         # 将日志转换成url，json中无空格
