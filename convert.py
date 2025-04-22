@@ -57,63 +57,77 @@ TENHOU6_BASE_URL = "https://tenhou.net/6/#json="
 # 掌心麻将的番种映射到天凤的番种
 Yakus = {
   0: '立直',
-  1: '门清自摸',
-  2: '一发',
-  3: '岭上开花',
-  4: '海底捞月',
-  5: '河底捞鱼',
-  6: '抢杠',
+  1: '門前清自摸和',
+  2: '一発',
+  3: '嶺上開花',
+  4: '海底摸月',
+  5: '河底撈魚',
+  6: '搶槓',
   7: '役牌：中',
   8: '役牌：发',
   9: '役牌：白',
   10: '役牌：场风牌',
   11: '役牌：自风牌',
-  12: '一杯口',
+  12: '一盃口',
   13: '平和',
   14: '断幺九',
-  15: '双立直',
-  16: '对对和',
-  17: '七对子',
+  15: 'ダブル立直',
+  16: '対々和',
+  17: '七対子',
   18: '三暗刻',
-  19: '三杠子',
-  20: '混老头',
-  21: '混全带幺九',
-  22: '一气通贯',
-  23: '三色同顺',
+  19: '三槓子',
+  20: '混老頭',
+  21: '混全帯么九',
+  22: '一気通貫',
+  23: '三色同順',
   24: '小三元',
   25: '三色同刻',
-  26: '纯全带幺九',
+  26: '純全帯么九',
   27: '混一色',
-  28: '二杯口',
+  28: '二盃口',
   29: '清一色',
   30: '流局满贯',
   31: '天和',
   32: '地和',
   33: '人和',
-  34: '国士无双',
-  35: '国士无双十三面',
-  36: '九莲宝灯',
-  37: '纯正九莲宝灯',
+  34: '国士無双',
+  35: '国士無双十三面待ち',
+  36: '九蓮宝燈',
+  37: '純正九蓮宝燈',
   38: '四暗刻',
-  39: '四暗刻单骑',
-  40: '四杠子',
-  41: '清老头',
+  39: '四暗刻単騎',
+  40: '四槓子',
+  41: '清老頭',
   42: '字一色',
   43: '大四喜',
   44: '小四喜',
   45: '大三元',
-  46: '绿一色',
+  46: '緑一色',
   47: '无发绿一色',
   48: '八连庄',
-  49: '赤宝牌',
-  50: '宝牌',
-  51: '里宝牌',
+  49: '赤ドラ',
+  50: 'ドラ',
+  51: '裏ドラ',
   52: '开立直',
   53: '开双立直',
   54: '开立直',
   55: '拔北宝牌',
   56: '役牌：北',
 }
+
+def parse_yakus(data):
+    all_yakus = f"{data['all_fu']}符{data['all_fang_num']}飜{data['all_point']}点"
+    yakus_list, type_list = [], []
+    for fang in data["fang_info"]:
+        fang_type = fang["fang_type"]
+        fang_num = fang["fang_num"]
+        yakus_list.append(f"{Yakus[fang_type]}({fang_num}飜)")
+        type_list.append(fang_type)
+    # 根据 type_list 对yakus_list 进行排序
+    yakus_list = [yakus_list[i] for i in sorted(range(len(type_list)), key=lambda i: type_list[i])]
+    yakus_list.insert(0, all_yakus)
+    return yakus_list
+
 
 # 读取掌心麻将的日志并将其转换成tenhou6的json格式
 def convert(input_file, output_file, init_point=None):
@@ -335,10 +349,11 @@ def convert(input_file, output_file, init_point=None):
                     negative_idx = [i for i, x in enumerate(delta_points) if x < 0]
 
                     if len(data["win_info"]) == 1: # 只铳一家
+                        yakus_list = parse_yakus(data["win_info"][0])
                         end_info = [
                             "和了",
                             delta_points,
-                            [positive_idx[0], negative_idx[0], negative_idx[0]],
+                            [positive_idx[0], negative_idx[0], negative_idx[0]] + yakus_list,
                         ]
                     elif len(data["win_info"]) == 2: # 一炮双响
                         lose_idx = negative_idx[0]
@@ -353,30 +368,30 @@ def convert(input_file, output_file, init_point=None):
                         delta_points1[lose_idx] = lose_point1
                         delta_points2[win_idx2] = delta_points[win_idx2]
                         delta_points2[lose_idx] = lose_point2
+
+                        yakus_list0 = parse_yakus(data["win_info"][0])
+                        yakus_list1 = parse_yakus(data["win_info"][1])
                         end_info = [
                             "和了",
                             delta_points1,
-                            [win_idx1, lose_idx, win_idx1],
+                            [win_idx1, lose_idx, win_idx1] + yakus_list0,
                             delta_points2,
-                            [win_idx2, lose_idx, win_idx2],
+                            [win_idx2, lose_idx, win_idx2] + yakus_list1,
                         ]
 
                 elif end_type == 1: # 1表示自摸
                     positive_idx = [i for i, x in enumerate(delta_points) if x > 0]
+                    yakus_list = parse_yakus(data["win_info"][0])
                     end_info = [
                         "和了",
                         delta_points,
-                        [positive_idx[0], positive_idx[0], positive_idx[0]],
+                        [positive_idx[0], positive_idx[0], positive_idx[0]] + yakus_list,
                     ]
                 elif end_type == 7: # 7表示流局
                     end_info = [ "流局", delta_points]
                 else:
                     print(f"Unknown end type: {event}")
 
-                # TODO: 解析番种信息
-                # win_info = data.get("win_info", [])
-                # for info in win_info:
-                #     fang_info = info.get("fang_info", {})
                 # print(data)
 
             elif eventType == 6 or eventType == 7 or eventType == 8 or eventType == 9 or eventType == 11:
@@ -408,8 +423,8 @@ def convert(input_file, output_file, init_point=None):
             log.append(player_game_log[userId]["discard_cards"])
 
         # 由于naga解析胡牌信息时可能会出问题，暂时不添加胡牌信息
-        # log.append(end_info)
-        log.append(["不明"]) # 这里添加一个空的胡牌信息，避免naga解析错误
+        log.append(end_info)
+        # log.append(["不明"]) # 这里添加一个空的胡牌信息，避免naga解析错误
         tenhou_game_log["log"] = [log]
 
         # 将日志转换成url，json中无空格
